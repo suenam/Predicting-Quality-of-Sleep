@@ -1,24 +1,30 @@
 ---
-title: "Quality Of Sleep Report"
 format: pdf
 authors: Suchanut Namcharoen, Ashish Job, Chloe Li, Emma Pham, Jaden Thai 
 editor: visual
 ---
 
-## Introduction
+\begin{center}
+      \vspace{5pt}
+      \textbf{The Report on Using Machine Learning Models to Find the Quality Of Sleep}\\ \vspace{5pt}
+      Group 5: Suchanut Namcharoen, Ashish Job, Chloe Li, Emma Pham, Jaden Thai \\ \vspace{5pt}
+      University of Houston \\ \vspace{5pt}
+      MATH 4322 - Machine Learning \\ \vspace{5pt}
+      Dr. Poliak \\ \vspace{5pt}
+      April 27, 2024
+\end{center}
 
-As college students, we generally do not get enough sleep. As a result, we thought it'd be interesting to
+\pagebreak
 
-includeee:
+# Introduction
 
-1.  why this dataset ?
-2.  what questions are we trying to answer?
-    -   Can we predict the quality of sleep (1-10) based on lifestyle factors such as blah blah blah?
-3.  which models will we be using ?
+## Background
 
-## About the Data
+\quad\quad Sleep is undeniably one of the most critical aspects of our health, particularly for college students. Balancing academic responsibilities, social life, and possibly part-time jobs or internships often leaves us feeling overwhelmed. Despite our best efforts to manage our time efficiently, adequate sleep always seems to elude us. Exploring the various factors influencing our sleep quality, including but not limited to our commitments, could provide valuable insights into this ongoing struggle. As a result, we decided to look into just that, and we came across the \textit{Sleep Health and Lifestyle Dataset} on \textit{Kaggle} that "comprises 400 rows and 13 columns, covering a wide range of variables related to sleep and daily habits."
 
-The **Sleep Health and Lifestyle Data set** contains 400 rows and 13 columns (400 observations and 13 variables) of data that relates to an individual's lifestyle and sleep habits. The variables are as follows:
+## Our Dataset
+
+\quad\quad As previously mentioned, the **Sleep Health and Lifestyle Data set** contains 400 rows and 13 columns (400 observations and 13 variables) of data that relate to an individual's lifestyle and sleep habits. The variables are as follows:
 
 -   Person ID: An identifier for each individual.
 -   Gender: The gender of the person (Male/Female).
@@ -38,8 +44,14 @@ The **Sleep Health and Lifestyle Data set** contains 400 rows and 13 columns (40
     -   Insomnia: The individual experiences difficulty falling asleep or staying asleep, leading to inadequate or poor-quality sleep.
 
     -   Sleep Apnea: The individual suffers from pauses in breathing during sleep, resulting in disrupted sleep patterns and potential health risks.
+    
+## Our Question:    
+    
+\quad\quad From these variables/columns, we decided to work towards answering the following question: \textbf{Can we predict the quality of sleep (1-10) based on the lifestyle factors present in the dataset?}
 
 ## Data Cleaning
+
+\quad\quad To move forward with creating our models to predict the `Quality of Sleep` variable, we realized that we may have to format, or clean, our dataset up, and to clean it up, we evaluated the dataset and determined which variables could possibly interfere with the accuracy of the model. We decided to remove the `PersonID` variable when creating the model, since that represents each observation and would not be used as neither a predictor nor response as well as the `Blood Pressure` variable because we were unable to accurately interpret the blood pressure measurements.
 
 ```{r}
 # Importing the dataset and viewing summary
@@ -47,10 +59,7 @@ data <- read.csv("Sleep_health_and_lifestyle_dataset.csv")
 summary(data)
 ```
 
-To clean up the data set, we evaluated the data set and determined which variables could possibly interfere with the accuracy of the model. We removed PersonID when creating the model, since that represents each observation and would not be used as neither a predictor nor response. The second column we removed was Blood Pressure because we were unable to accurately interpret the blood pressure measurements.
-
-\
-We then converted the remaining categorical variables, which included Occupation, Gender, Sleep Disorder, and BMI Category.
+\quad\quad We then converted the remaining categorical variables, which included `Occupation`, `Gender`, `Sleep Disorder`, and `BMI Category`.
 
 ```{r}
 data$Occupation <- as.factor(data$Occupation) 
@@ -59,9 +68,13 @@ data$Sleep.Disorder <- as.factor(data$Sleep.Disorder)
 data$BMI.Category <- as.factor(data$BMI.Category)
 ```
 
+## Our Chosen Approaches:
+
+\quad\quad With our data cleaned up, we now had to transition into choosing what models we would be using to answer our proposed question. First, since we were predicting a quantitative value, we already had our options whittled down to a fewer number of options, of which we decided to choose the \textbf{Linear Regression Model}, the \textbf{Decision Tree Model}, and the \textbf{Random Forest Model}.
+
 ## Linear Regression Model
 
-We decided to first approach the data set using a multiple linear regression model because we wanted to inference the quality of sleep (1-10), a quantitative response variable, using multiple predictors. Furthermore, linear regression models are generally more straightforward to understand and interpret, so we can quickly identify which predictors are statistically significant and exactly how they affect the response variable.
+\quad\quad We decided to first approach the data set using a multiple linear regression model because we wanted to inference the quality of sleep (1-10), a quantitative response variable, using multiple predictors. Furthermore, linear regression models are generally more straightforward to understand and interpret, so we can quickly identify which predictors are statistically significant and exactly how they affect the response variable.
 
 ```{r}
 # Creating the multiple linear regression model
@@ -69,7 +82,7 @@ sleep.model <- lm(Quality.of.Sleep ~.-Blood.Pressure-Person.ID, data = data)
 summary(sleep.model)
 ```
 
-Based on the summary of the linear regression model, we can observe that multiple predictors are statistically significant (low p-values) as indicated by the asterisks on the right side of the predictors. From these predictors, we notice that:
+\quad\quad Based on the summary of the linear regression model, we can observe that multiple predictors are statistically significant (low p-values) as indicated by the asterisks on the right side of the predictors. From these predictors, we notice that:
 
 -   Gender Male has a positive estimate (increasing the quality of sleep by approximately 0.56), indicating that males generally have a better quality of sleep compared to females.
 
@@ -81,7 +94,7 @@ Based on the summary of the linear regression model, we can observe that multipl
 
 -   Higher stress levels are associated with a decrease in sleep quality.
 
-The multiple R-squared value is 0.9668, which indicates that the model explains about 96.68% of the variance in sleep quality suggesting a good model fit.
+\quad\quad The multiple R-squared value is 0.9668, which indicates that the model explains about 96.68% of the variance in sleep quality suggesting a good model fit.
 
 ### Further Analysis of the Model
 
@@ -91,6 +104,6 @@ par(mfrow = c(1,1))
 plot(sleep.model)
 ```
 
-The diagnostic plots above indicate that the linear assumption might not hold due to the high leverages/outliers, deviations from the diagonal line in the Q-Q Plot, and the obvious trend in the Residuals vs. Fitted Plot. This means that we will have to consider other models because the data set could be too complex to use the linear regression model, or further clean up the model to exclude any potential outliers.
+\quad\quad The diagnostic plots above indicate that the linear assumption might not hold due to the high leverages/outliers, deviations from the diagonal line in the Q-Q Plot, and the obvious trend in the Residuals vs. Fitted Plot. This means that we will have to consider other models because the data set could be too complex to use the linear regression model, or further clean up the model to exclude any potential outliers.
 
 ## Random Forest Model
