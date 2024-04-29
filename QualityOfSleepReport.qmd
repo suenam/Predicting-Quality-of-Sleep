@@ -4,6 +4,7 @@ authors: Suchanut Namcharoen, Ashish Job, Chloe Li, Emma Pham, Jaden Thai
 editor: visual
 ---
 
+```{=tex}
 \begin{center}
       \vspace{5pt}
       \textbf{The Report on Using Machine Learning Models to Find the Quality Of Sleep}\\ \vspace{5pt}
@@ -13,7 +14,7 @@ editor: visual
       Dr. Poliak \\ \vspace{5pt}
       April 27, 2024
 \end{center}
-
+```
 \pagebreak
 
 # Introduction
@@ -44,9 +45,9 @@ editor: visual
     -   Insomnia: The individual experiences difficulty falling asleep or staying asleep, leading to inadequate or poor-quality sleep.
 
     -   Sleep Apnea: The individual suffers from pauses in breathing during sleep, resulting in disrupted sleep patterns and potential health risks.
-    
-## Our Question    
-    
+
+## Our Question
+
 \quad\quad From these variables/columns, we decided to work towards answering the following question: \textbf{Can we predict the quality of sleep (1-10) based on the lifestyle factors present in the dataset?}
 
 ## Data Cleaning
@@ -78,12 +79,13 @@ data$BMI.Category <- as.factor(data$BMI.Category)
 
 ### Why We Chose this Model
 
-\quad\quad We decided to first approach the data set using a multiple linear regression model because we wanted to inference the quality of sleep (1-10), a quantitative response variable, using multiple predictors. Furthermore, linear regression models are generally more straightforward to understand and interpret, so we can quickly identify which predictors are statistically significant and exactly how they affect the response variable.
+\quad\quad We decided to first approach the data set using a multiple linear regression model because we wanted to predict the quality of sleep (1-10), a quantitative response variable, using multiple predictors. Furthermore, linear regression models are generally more straightforward to understand and interpret, so we can quickly identify which predictors are statistically significant and exactly how they affect the response variable.
 
 ### Our Formula
 
 \quad\quad In the given equation, $y$ represents the response variable Quality of Sleep, $\beta_0$ represents the model intercept, $\beta_i$ for $i = 1, \ldots, 11$ represents the coefficients of the predictors, where:
 
+```{=tex}
 \begin{itemize}
     \item \( \beta_1 \) represents the coefficient for Gender,
     \item \( \beta_2 \) represents the coefficient for Age,
@@ -97,7 +99,7 @@ data$BMI.Category <- as.factor(data$BMI.Category)
     \item \( \beta_{10} \) represents the coefficient for Daily Steps, and
     \item \( \beta_{11} \) represents the coefficient for Sleep Disorder.
 \end{itemize}
-
+```
 So, the equation representing the multiple linear regression model is as follows:
 
 $y$ = $\beta_0$ + $\beta_1$(\text{Gender}) + $\beta_2$(\text{Age}) + $\beta_3$(\text{Occupation}) + $\beta_4$(\text{Sleep Duration}) + $\beta_5$(\text{Physical Activity Level}) + $\beta_6$(\text{Stress Level}) + $\beta_7$(\text{BMI Category}) + $\beta_8$(\text{Heart Rate}) + $\beta_9$(\text{Daily Steps}) + $\beta_{10}$(\text{Daily Steps}) + $\beta_{11}$(\text{Sleep Disorder})
@@ -126,7 +128,7 @@ summary(sleep.model)
 
 ```{r}
 # Diagnostic plots for regression
-par(mfrow = c(1,1))
+par(mfrow = c(2,2))
 plot(sleep.model)
 ```
 
@@ -143,6 +145,141 @@ plot(sleep.model)
 \textit{Quality of Sleep} $\sim$ \textit{Gender} + \textit{Age} + \textit{Occupation} + \textit{Sleep Duration} + \textit{Physical Activity Level} + \textit{Stress Level} + \textit{BMI Category} + \textit{Heart Rate} + \textit{Daily Steps} + \textit{Daily Steps} + \textit{Sleep Disorder}
 
 ### Regression Tree
+### Split data into a training and testing set.
+
+We will split the data set into two subsets. One subset will be the training data set where we will use it to build our model. The remaining subset will be the testing data set where we will determine how accurate our model is at predicting the quality of sleep attribute. The training set will be 80% of the entire data set while we leave 20% for testing.
+
+```{r}
+set.seed(1)
+sample <- sample(nrow(data), nrow(data)*0.80)
+train <- data[sample,]
+test <- data[-sample,]
+```
+
+### Creating the Decision Tree Model
+
+Our decision tree model will use the predictors of *Gender, Age, Occupation, Sleep Duration, Physical Activity Level, Stress Level, BMI Category, Heart Rate, Daily Steps,* and *Disorders* to predict the *Quality of Sleep*.
+
+```{r}
+library(tree)
+tree <- tree(Quality.of.Sleep ~ .-Blood.Pressure-Person.ID, data=train)
+summary(tree)
+plot(tree)
+text(tree, pretty = 1)
+```
+
+1.  The root node uses *Sleep Duration \< 7* as the primary decision point.
+
+    -   If *Sleep Duration* is less than 7 *hours*, we move to the left branch.
+
+    -   If *Sleep Duration* is greater than or equal to 7 hours, we move to the right branch.
+
+2.  On the left branch, the node uses a shorthand for the Occupations.
+
+    -   If the *Occupation* is either *Doctor, Engineer, Nurse, Salesperson, Scientist,* or *Software Engineer*...
+
+        -   And if the *Heart Rate* is less than 79 bpm, then the predicted *Quality of Sleep* is 6.
+
+        -   And if the *Heart Rate* is greater than or equal to 79 bpm, then the predicted *Quality of Sleep* is 4.6.
+
+    -   If the *Occupation* is either *Accountant, Lawyer, Manager, Sales Representative,* or *Teacher*...
+
+        -   And if the number of *Daily Steps* is less than 5550 steps, then the predicted *Quality of Sleep* is 5.8.
+
+        -   And if the number of *Daily Steps* is greater than or equal to 5550 steps, then the predicted *Quality of Sleep* is 7.
+
+3.  On the right branch, the node uses *Sleep Duration \< 7.95* as the decision point.
+
+    -   If the *Sleep Duration* is less than 7.95...
+
+        -   And if the *Occupation* is a *Doctor*, then the predicted *Quality of Sleep* is 7.
+
+        -   And if the *Occupation* is NOT a *Doctor*, then the predicted *Quality of Sleep* is 7.989.
+
+    -   If the *Sleep Duration* is greater than or equal to 7.95, then the predicted *Quality of Sleep* is 9.
+
+The model suggests that both sleep duration and occupation are important predictors, along with heart rate and daily steps for certain branches of the tree. *Sleep Duration* was the primary decision point for decision tree, suggesting that *Sleep Duration* is the most important predictor when determining the *Quality of Sleep*.
+
+### MSE
+
+```{r}
+prediction.original <- predict(tree, test)
+mse.original <- mean((prediction.original - test$Quality.of.Sleep)^2)
+mse.original
+```
+
+From the model, we achieved a Mean Test Error Rate (MSE) of 0.2054233, meaning that our models predictions have an average squared deviation of 0.2054233 from the true values.
+
+To avoid overfitting the data, we pruned the tree.
+
+### Pruned Tree
+
+Lets perform cross validation on our model to determine the optimal size to prune our tree to.
+
+```{r}
+cv <- cv.tree(tree, FUN=prune.tree)
+plot(cv$size, cv$dev, type = "b")
+```
+
+From the plot, it appears that the optimal size may be at 3 (the 'elbow' of the plot) as the line seems to start to flatten after around this point, indicating the size beyond this point doesn't improve the model by much.
+
+```{r}
+tree.pruned <- prune.tree(tree, best=3)
+summary(tree.pruned)
+plot(tree.pruned)
+text(tree.pruned)
+```
+
+### MSE
+
+```{r}
+prediction.pruned <- predict(tree.pruned, test)
+mse.pruned <- mean((prediction.pruned - test$Quality.of.Sleep)^2)
+mse.pruned
+```
+
+From the model, we achieved a Mean Test Error Rate (MSE) of 0.378096, meaning that our models predictions have an average squared deviation of 0.378096 from the true values. This is a higher MSE than the unpruned tree, indicating that we lost some accuracy in the process of pruning the tree.
+
+To further improve our model, we created a random forest model.
+
+### Random Forest
+
+Creating a random forest model with 500 trees...
+
+```{r}
+library(randomForest)
+set.seed(1)
+random.forest <- randomForest(
+  Quality.of.Sleep ~ .-Blood.Pressure-Person.ID,
+  data = train,
+  ntree = 500,
+  mtry = 3,
+  importance = TRUE 
+)
+```
+
+The importance as well as the plotted random forest
+
+```{r}
+varImpPlot(random.forest)
+```
+
+```{r}
+random.forest.tree <- tree(Quality.of.Sleep ~ .-Blood.Pressure-Person.ID, data = train, subset = random.forest$inbag)
+plot(random.forest.tree)
+text(random.forest.tree, pretty = 1)
+```
+
+### MSE
+
+```{r}
+prediction.random.forest <- predict(random.forest, test)
+mse.random.forest <- mean((prediction.random.forest - test$Quality.of.Sleep) ^ 2)
+mse.random.forest
+```
+
+From the model, we achieved a Mean Test Error Rate (MSE) of 0.1228698, meaning that our models predictions have an average squared deviation of 0.1228698 from the true values. This is better than the original decision tree and pruned decision tree.
+
 
 # Conclusion
 
