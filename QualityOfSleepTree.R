@@ -1,8 +1,8 @@
 library(tree)
+library(randomForest)
 
 # import data
 data <- read.csv("Sleep_health_and_lifestyle_dataset.csv")
-set.seed(1)
 
 # clean data
 data$Occupation <- as.factor(data$Occupation)
@@ -10,61 +10,118 @@ data$Gender <- as.factor(data$Gender)
 data$Sleep.Disorder <- as.factor(data$Sleep.Disorder)
 data$BMI.Category <- as.factor(data$BMI.Category)
 
-# split into train and test sets
-sample <- sample(nrow(data), nrow(data)*0.80)
-train <- data[sample,]
-test <- data[-sample,]
+# DECISION TREE -----------------
+originalTreeMSE <- rep(0, 10)
+for (i in 1:10) {
+  set.seed(i)
+  
+  # split into train and test sets
+  sample <- sample(nrow(data), nrow(data)*0.80)
+  train <- data[sample,]
+  test <- data[-sample,]
+  
+  # build tree
+  tree <- tree(Quality.of.Sleep ~ .-Blood.Pressure-Person.ID, data=train)
+  
+  # mse
+  prediction.original <- predict(tree, test)
+  mse.original <- mean((prediction.original - test$Quality.of.Sleep)^2)
+  originalTreeMSE[i] <- mse.original
+}
+originalTreeMSE
+mean(originalTreeMSE)
 
-# create tree model
-tree <- tree(Quality.of.Sleep ~ .-Blood.Pressure-Person.ID, data=train)
+# display tree
 summary(tree)
 plot(tree)
-text(tree)
+text(tree, pretty = 0)
 
-# helper to understand Occupations in tree model
-levels(data$Occupation)
+# find r^2 of decision tree
+dataMean <- mean(test$Quality.of.Sleep)
+SSTotal <- sum((test$Quality.of.Sleep - dataMean)^2)
+originalSSResidual <- sum((test$Quality.of.Sleep - prediction.original)^2)
+originalR2 <- 1 - (originalSSResidual / SSTotal)
+originalR2
 
-# perform cross validation on tree
-cv <- cv.tree(tree)
-cv
-# plot cv to find the 'elbow' for best model size
+
+# PRUNED TREE -----------------
+prunedTreeMSE <- rep(0, 10)
+for (i in 1:10) {
+  set.seed(i)
+  
+  # split into train and test sets
+  sample <- sample(nrow(data), nrow(data)*0.80)
+  train <- data[sample,]
+  test <- data[-sample,]
+  
+  # tree pruning cross validation
+  cv <- cv.tree(tree)
+  
+  # build pruned
+  tree.pruned <- prune.tree(tree, best=3)
+  
+  # mse
+  prediction.pruned <- predict(tree.pruned, test)
+  mse.pruned <- mean((prediction.pruned - test$Quality.of.Sleep)^2)
+  prunedTreeMSE[i] <- mse.pruned
+}
+prunedTreeMSE
+mean(prunedTreeMSE)
+
+# plot cv deviance
 plot(cv$size, cv$dev, type = "b")
 
-# found elbow of 3 to prune tree with
-tree.pruned <- prune.tree(tree, best=3)
+# display pruned tree
 summary(tree.pruned)
 plot(tree.pruned)
-text(tree.pruned)
+text(tree.pruned, pretty = 0)
 
-# compare original vs pruned tree
-prediction.original <- predict(tree, test)
-prediction.pruned <- predict(tree.pruned, test)
+# find r^2 of pruned tree
+dataMean <- mean(test$Quality.of.Sleep)
+SSTotal <- sum((test$Quality.of.Sleep - dataMean)^2)
+prunedSSResidual <- sum((test$Quality.of.Sleep - prediction.pruned)^2)
+prunedR2 <- 1 - (prunedSSResidual / SSTotal)
+prunedR2
 
-mse.original <- mean((prediction.original - test$Quality.of.Sleep)^2)
-mse.pruned <- mean((prediction.pruned - test$Quality.of.Sleep)^2)
 
-mse.original
-mse.pruned
-# pruned tree results in a worse mse, suggesting decision tree isn't a good enough model.
+# RANDOM FOREST -----------------
+randomForestMSE <- rep(0, 10)
+for (i in 1:10) {
+  set.seed(i)
+  
+  # split into train and test sets
+  sample <- sample(nrow(data), nrow(data)*0.80)
+  train <- data[sample,]
+  test <- data[-sample,]
+  
+  # build random forest of 500 trees
+  random.forest <- randomForest(
+    Quality.of.Sleep ~ .-Blood.Pressure-Person.ID,
+    data = train,
+    ntree = 500,
+    mtry = 3,
+    importance = TRUE,
+  )
+  
+  # mse
+  prediction.random.forest <- predict(random.forest, test)
+  mse.random.forest <- mean((prediction.random.forest - test$Quality.of.Sleep)^2)
+  randomForestMSE[i] <- mse.random.forest
+}
+randomForestMSE
+mean(randomForestMSE)
 
-# lets compare it with a random forest model...
-library(randomForest)
+# importance plot
+varImpPlot(random.forest)
 
-# create random forest model with 500 trees
-random.forest <- randomForest(
-  Quality.of.Sleep ~ .-Blood.Pressure-Person.ID,
-  data = train,
-  ntree = 500,
-  mtry = 3,
-  importance = TRUE 
-)
-summary(random.forest)
-random.forest$importance
+# plot tree
+random.forest.tree <- tree(Quality.of.Sleep ~ .-Blood.Pressure-Person.ID, data = train, subset = random.forest$inbag)
+plot(random.forest.tree)
+text(random.forest.tree, pretty = 0)
 
-# analyze random forest
-prediction.random.forest <- predict(random.forest, test)
-mse.random.forest <- mean((prediction.random.forest - test$Quality.of.Sleep) ^ 2)
-
-cat("Original Decision Tree MSE:", mse.original, "\n")
-cat("Pruned Decision Tree MSE:", mse.pruned, "\n")
-cat("Random Forest MSE:", mse.random.forest, "\n")
+# find r^2 of random forest
+dataMean <- mean(test$Quality.of.Sleep)
+SSTotal <- sum((test$Quality.of.Sleep - dataMean)^2)
+randomForestSSResidual <- sum((test$Quality.of.Sleep - prediction.random.forest)^2)
+randomForestR2 <- 1 - (randomForestSSResidual / SSTotal)
+randomForestR2
