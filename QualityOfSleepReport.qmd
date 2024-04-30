@@ -8,7 +8,7 @@ editor: visual
 \begin{center}
       \vspace{5pt}
       \textbf{The Report on Using Machine Learning Models to Find the Quality Of Sleep}\\ \vspace{5pt}
-      Group 5: Suchanut Namcharoen, Ashish Job, Chloe Li, Emma Pham, Jaden Thai \\ \vspace{5pt}
+      Group 5: Suchanut (Sue) Namcharoen, Ashish Job, Chloe Li, Emma Pham, Jaden Thai \\ \vspace{5pt}
       University of Houston \\ \vspace{5pt}
       MATH 4322 - Machine Learning \\ \vspace{5pt}
       Dr. Poliak \\ \vspace{5pt}
@@ -17,7 +17,7 @@ editor: visual
 ```
 \pagebreak
 
-# Introduction
+# Introduction (Chloe, Jaden, Ashish)
 
 ## Background
 
@@ -50,7 +50,7 @@ editor: visual
 
 \quad\quad From these variables/columns, we decided to work towards answering the following question: \textbf{Can we predict the quality of sleep (1-10) based on the lifestyle factors present in the dataset?}
 
-## Data Cleaning
+## Data Cleaning (Sue, Emma, Chloe)
 
 \quad\quad To move forward with creating our models to predict the `Quality of Sleep` variable, we realized that we may have to format, or clean, our dataset up, and to clean it up, we evaluated the dataset and determined which variables could possibly interfere with the accuracy of the model. We decided to remove the `PersonID` variable when creating the model, since that represents each observation and would not be used as neither a predictor nor response as well as the `Blood Pressure` variable because we were unable to accurately interpret the blood pressure measurements.
 
@@ -75,7 +75,7 @@ data$BMI.Category <- as.factor(data$BMI.Category)
 
 # Our Methods
 
-## Linear Regression Model
+## Linear Regression Model (Jaden, Emma)
 
 ### Why We Chose this Model
 
@@ -134,7 +134,7 @@ plot(sleep.model)
 
 \quad\quad The diagnostic plots above indicate that the linear assumption might not hold due to the high leverages/outliers, deviations from the diagonal line in the Q-Q Plot, and the obvious trend in the Residuals vs. Fitted Plot. This means that we will have to consider other models because the data set could be too complex to use the linear regression model, or further clean up the model to exclude any potential outliers.
 
-## Tree-Based Models
+## Tree-Based Models (Sue, Chloe, Ashish)
 
 ### Why we Chose this Model
 
@@ -147,7 +147,7 @@ plot(sleep.model)
 ### Regression Tree
 ### Split data into a training and testing set.
 
-We will split the data set into two subsets. One subset will be the training data set where we will use it to build our model. The remaining subset will be the testing data set where we will determine how accurate our model is at predicting the quality of sleep attribute. The training set will be 80% of the entire data set while we leave 20% for testing.
+\quad\quad We will split the data set into two subsets. One subset will be the training data set where we will use it to build our model. The remaining subset will be the testing data set where we will determine how accurate our model is at predicting the quality of sleep attribute. The training set will be 80% of the entire data set while we leave 20% for testing.
 
 ```{r}
 set.seed(1)
@@ -158,7 +158,7 @@ test <- data[-sample,]
 
 ### Creating the Decision Tree Model
 
-Our decision tree model will use the predictors of *Gender, Age, Occupation, Sleep Duration, Physical Activity Level, Stress Level, BMI Category, Heart Rate, Daily Steps,* and *Disorders* to predict the *Quality of Sleep*.
+\quad\quad Our decision tree model will use the predictors of *Gender, Age, Occupation, Sleep Duration, Physical Activity Level, Stress Level, BMI Category, Heart Rate, Daily Steps,* and *Disorders* to predict the *Quality of Sleep*.
 
 ```{r}
 library(tree)
@@ -198,7 +198,7 @@ text(tree, pretty = 1)
 
     -   If the *Sleep Duration* is greater than or equal to 7.95, then the predicted *Quality of Sleep* is 9.
 
-The model suggests that both sleep duration and occupation are important predictors, along with heart rate and daily steps for certain branches of the tree. *Sleep Duration* was the primary decision point for decision tree, suggesting that *Sleep Duration* is the most important predictor when determining the *Quality of Sleep*.
+\quad\quad The model suggests that both sleep duration and occupation are important predictors, along with heart rate and daily steps for certain branches of the tree. *Sleep Duration* was the primary decision point for decision tree, suggesting that *Sleep Duration* is the most important predictor when determining the *Quality of Sleep*.
 
 ### MSE
 
@@ -208,20 +208,20 @@ mse.original <- mean((prediction.original - test$Quality.of.Sleep)^2)
 mse.original
 ```
 
-From the model, we achieved a Mean Test Error Rate (MSE) of 0.2054233, meaning that our models predictions have an average squared deviation of 0.2054233 from the true values.
+\quad\quad From the model, we achieved a Mean Test Error Rate (MSE) of 0.2054233, meaning that our models predictions have an average squared deviation of 0.2054233 from the true values.
 
 To avoid overfitting the data, we pruned the tree.
 
 ### Pruned Tree
 
-Lets perform cross validation on our model to determine the optimal size to prune our tree to.
+\quad\quad Lets perform cross validation on our model to determine the optimal size to prune our tree to.
 
 ```{r}
 cv <- cv.tree(tree, FUN=prune.tree)
 plot(cv$size, cv$dev, type = "b")
 ```
 
-From the plot, it appears that the optimal size may be at 3 (the 'elbow' of the plot) as the line seems to start to flatten after around this point, indicating the size beyond this point doesn't improve the model by much.
+\quad\quad From the plot, it appears that the optimal size may be at 3 (the 'elbow' of the plot) as the line seems to start to flatten after around this point, indicating the size beyond this point doesn't improve the model by much.
 
 ```{r}
 tree.pruned <- prune.tree(tree, best=3)
@@ -238,7 +238,7 @@ mse.pruned <- mean((prediction.pruned - test$Quality.of.Sleep)^2)
 mse.pruned
 ```
 
-From the model, we achieved a Mean Test Error Rate (MSE) of 0.378096, meaning that our models predictions have an average squared deviation of 0.378096 from the true values. This is a higher MSE than the unpruned tree, indicating that we lost some accuracy in the process of pruning the tree.
+\quad\quad From the model, we achieved a Mean Test Error Rate (MSE) of 0.378096, meaning that our models predictions have an average squared deviation of 0.378096 from the true values. This is a higher MSE than the unpruned tree, indicating that we lost some accuracy in the process of pruning the tree.
 
 To further improve our model, we created a random forest model.
 
@@ -278,12 +278,12 @@ mse.random.forest <- mean((prediction.random.forest - test$Quality.of.Sleep) ^ 2
 mse.random.forest
 ```
 
-From the model, we achieved a Mean Test Error Rate (MSE) of 0.1228698, meaning that our models predictions have an average squared deviation of 0.1228698 from the true values. This is better than the original decision tree and pruned decision tree.
+\quad\quad From the model, we achieved a Mean Test Error Rate (MSE) of 0.1228698, meaning that our models predictions have an average squared deviation of 0.1228698 from the true values. This is better than the original decision tree and pruned decision tree.
 
 
 # Conclusion
 
-Talk about what we found is the best option, yada yada yada
+\quad\quad In conclusion, after exploring multiple machine learning models to predict the quality of sleep based on various lifestyle factors, we found that the Random Forest model outperformed the Linear Regression and Decision Tree models in terms of predictive accuracy. The Random Forest model achieved a Mean Test Error Rate (MSE) of 0.1228698, indicating a lower average squared deviation from the true values compared to the other models. This suggests that Random Forest, with its ensemble learning approach and ability to handle complex interactions between predictors, provides the most reliable predictions for sleep quality in our dataset. Therefore, for applications requiring accurate sleep quality predictions, the Random Forest model would be the preferred choice.
 
 # References
 
