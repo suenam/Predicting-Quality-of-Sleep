@@ -240,11 +240,11 @@ mse.pruned
 
 \quad\quad From the model, we achieved a Mean Test Error Rate (MSE) of 0.378096, meaning that our models predictions have an average squared deviation of 0.378096 from the true values. This is a higher MSE than the unpruned tree, indicating that we lost some accuracy in the process of pruning the tree.
 
-To further improve our model, we created a random forest model.
+To further improve our model, we created a random forest model to prevent overfitting and to handle non-linear data/relationships.
 
 ### Random Forest
 
-Creating a random forest model with 500 trees...
+First, we created a random forest model with 500 trees. 
 
 ```{r}
 library(randomForest)
@@ -258,7 +258,7 @@ random.forest <- randomForest(
 )
 ```
 
-The importance as well as the plotted random forest
+The following is the importance plot and the plotted random forest decision tree.
 
 ```{r}
 varImpPlot(random.forest)
